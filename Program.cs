@@ -10,6 +10,7 @@ namespace testevillelarpg
         public string Nome { get; set; }
         public int Vida { get; set; }
         public int Ataque { get; set; }
+        //c
     }
 
     class Program
