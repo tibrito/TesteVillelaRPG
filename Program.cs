@@ -1,16 +1,17 @@
 ﻿
 using System;
 using System.Collections.Generic;
-using System.Reflection.PortableExecutable;
 
-namespace testevillelarpg
+namespace rpgensaio
 {
     public class Personagem
     {
         public string Nome { get; set; }
         public int Vida { get; set; }
         public int Ataque { get; set; }
-        //c
+
+        // Novo: cooldown do ataque especial
+        public int CooldownEspecial { get; set; } = 0;
     }
 
     class Program
@@ -55,14 +56,13 @@ namespace testevillelarpg
 
             player = personagens[escolha];
 
-            Console.WriteLine($"\nVocê escolheu: {player.Nome}");
-
             Random rnd = new Random();
             do
             {
                 enemy = personagens[rnd.Next(personagens.Count)];
             } while (enemy.Nome == player.Nome);
 
+            Console.WriteLine($"\nVocê escolheu: {player.Nome}");
             Console.WriteLine($"Seu inimigo será: {enemy.Nome}");
 
             Console.WriteLine("\nPressione ENTER para iniciar a batalha...");
@@ -74,38 +74,75 @@ namespace testevillelarpg
         static void BattleArena()
         {
             Console.Clear();
-            Console.WriteLine("=== BATALHA ===");
 
             while (player.Vida > 0 && enemy.Vida > 0)
             {
-                Console.WriteLine($"\n{player.Nome} ataca causando {player.Ataque} de dano!");
-                enemy.Vida -= player.Ataque;
+                Console.Clear();
+                Console.WriteLine("=== BATALHA ===\n");
+                Console.WriteLine($"{player.Nome} - Vida: {player.Vida} | Cooldown Especial: {player.CooldownEspecial}");
+                Console.WriteLine($"{enemy.Nome} - Vida: {enemy.Vida}");
+                Console.WriteLine("\nEscolha sua ação:");
 
+                Console.WriteLine("(1) Ataque Normal");
+
+                if (player.CooldownEspecial == 0)
+                    Console.WriteLine("(2) Ataque Especial (+15% dano)");
+                else
+                    Console.WriteLine("(2) Ataque Especial (INDISPONÍVEL)");
+
+                Console.Write("\nDigite sua escolha: ");
+                string escolha = Console.ReadLine();
+
+                // Turno do jogador
+                if (escolha == "1")
+                {
+                    Console.WriteLine($"\n{player.Nome} usa ATAQUE NORMAL!");
+                    enemy.Vida -= player.Ataque;
+                }
+                else if (escolha == "2" && player.CooldownEspecial == 0)
+                {
+                    int danoEspecial = (int)(player.Ataque * 1.15);
+                    Console.WriteLine($"\n{player.Nome} usa ATAQUE ESPECIAL causando {danoEspecial} de dano!");
+                    enemy.Vida -= danoEspecial;
+
+                    player.CooldownEspecial = 2; // leva 2 turnos para recarregar
+                }
+                else
+                {
+                    Console.WriteLine("\nAção inválida! Você perde o turno!");
+                }
+
+                // Verifica se o inimigo morreu
                 if (enemy.Vida <= 0) break;
 
-                Console.WriteLine($"{enemy.Nome} agora tem {enemy.Vida} de vida.");
-
+                // Turno do inimigo
                 Console.WriteLine($"\n{enemy.Nome} ataca causando {enemy.Ataque} de dano!");
                 player.Vida -= enemy.Ataque;
 
-                Console.WriteLine($"{player.Nome} agora tem {player.Vida} de vida.");
+                // Atualiza cooldown
+                if (player.CooldownEspecial > 0)
+                    player.CooldownEspecial--;
 
-                Console.WriteLine("\nPressione ENTER para continuar...");
+                // Verifica morte do jogador
+                if (player.Vida <= 0) break;
+
+                Console.WriteLine("\nPressione ENTER para continuar o próximo turno...");
                 Console.ReadLine();
             }
 
+            // Resultado final
+            Console.Clear();
             if (player.Vida > 0)
-                Console.WriteLine($"\n🎉 {player.Nome} venceu a batalha!");
+                Console.WriteLine($"🎉 {player.Nome} venceu a batalha!");
             else
-                Console.WriteLine($"\n💀 {enemy.Nome} venceu a batalha!");
+                Console.WriteLine($"💀 {enemy.Nome} venceu a batalha!");
 
             Console.WriteLine("\nPressione ENTER para reiniciar...");
             Console.ReadLine();
-
-            handleRestart();
+            Restart();
         }
 
-        static void handleRestart()
+        static void Restart()
         {
             player = null;
             enemy = null;
