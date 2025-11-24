@@ -8,10 +8,9 @@ namespace testevillelarpg
         public string Nome { get; set; }
         public int Vida { get; set; }
         public int Ataque { get; set; }
+        public int Defesa { get; set; }
 
-        // skill ataque especial
         public int CooldownEspecial { get; set; } = 0;
-        public int Defesa { get; internal set; }
     }
 
     class Program
@@ -25,13 +24,10 @@ namespace testevillelarpg
             while (true)
             {
                 if (gameState == "selection")
-                {
                     CharacterSelection();
-                }
+
                 else if (gameState == "battle" && player != null && enemy != null)
-                {
                     BattleArena();
-                }
             }
         }
 
@@ -42,9 +38,9 @@ namespace testevillelarpg
 
             var personagens = new List<Personagem>()
             {
-                new Personagem { Nome = "Guerreiro", Vida = 100, Ataque = 35, Defesa = 15},
-                new Personagem { Nome = "Mago", Vida = 100, Ataque = 45, Defesa = 5 },
-                new Personagem { Nome = "Arqueiro", Vida = 100, Ataque =42, Defesa = 8},
+                new Personagem { Nome = "Guerreiro", Vida = 150, Ataque = 30, Defesa = 20 },
+                new Personagem { Nome = "Mago", Vida = 100, Ataque = 45, Defesa = 8 },
+                new Personagem { Nome = "Arqueiro", Vida = 120, Ataque = 35, Defesa = 12 }
             };
 
             Console.WriteLine("\nEscolha seu personagem:");
@@ -53,29 +49,51 @@ namespace testevillelarpg
 
             Console.Write("\nDigite o número: ");
             string? input = Console.ReadLine();
+
             if (!int.TryParse(input, out int escolha) || escolha < 1 || escolha > personagens.Count)
             {
                 Console.WriteLine("Escolha inválida! Pressione ENTER para tentar novamente...");
                 Console.ReadLine();
                 return;
             }
-            escolha -= 1;
 
-            player = personagens[escolha];
+            player = personagens[escolha - 1];
 
-            Random rnd = new Random();
-            do
+            // Escolha do inimigo
+            Console.Clear();
+            Console.WriteLine("=== SELEÇÃO DO INIMIGO ===\n");
+
+            for (int i = 0; i < personagens.Count; i++)
+                if (personagens[i].Nome != player.Nome)
+                    Console.WriteLine($"{i + 1} - {personagens[i].Nome}");
+
+            Console.Write("\nDigite o número do inimigo: ");
+            input = Console.ReadLine();
+
+            if (!int.TryParse(input, out escolha) || escolha < 1 || escolha > personagens.Count ||
+                personagens[escolha - 1].Nome == player.Nome)
             {
-                enemy = personagens[rnd.Next(personagens.Count)];
-            } while (enemy.Nome == player.Nome);
+                Console.WriteLine("Escolha inválida! Pressione ENTER para tentar novamente...");
+                Console.ReadLine();
+                return;
+            }
+
+            enemy = personagens[escolha - 1];
 
             Console.WriteLine($"\nVocê escolheu: {player.Nome}");
-            Console.WriteLine($"Seu inimigo será: {enemy.Nome}");
+            Console.WriteLine($"O adversário será: {enemy.Nome}");
 
             Console.WriteLine("\nPressione ENTER para iniciar a batalha...");
             Console.ReadLine();
 
             gameState = "battle";
+        }
+
+        static int CalcularDano(Personagem atacante, Personagem alvo)
+        {
+            int dano = atacante.Ataque - (alvo.Defesa / 2);
+            if (dano < 1) dano = 1; // nunca zero
+            return dano;
         }
 
         static void BattleArena()
@@ -86,8 +104,8 @@ namespace testevillelarpg
             {
                 Console.Clear();
                 Console.WriteLine("=== BATALHA ===\n");
-                Console.WriteLine($"{player.Nome} - Vida: {player.Vida} | Cooldown Especial: {player.CooldownEspecial}");
-                Console.WriteLine($"{enemy.Nome} - Vida: {enemy.Vida}");
+                Console.WriteLine($"{player.Nome} - Vida: {player.Vida} | Defesa: {player.Defesa} | Cooldown: {player.CooldownEspecial}");
+                Console.WriteLine($"{enemy.Nome} - Vida: {enemy.Vida} | Defesa: {enemy.Defesa}");
                 Console.WriteLine("\nEscolha sua ação:");
 
                 Console.WriteLine("(1) Ataque Normal");
@@ -100,45 +118,47 @@ namespace testevillelarpg
                 Console.Write("\nDigite sua escolha: ");
                 string escolha = Console.ReadLine();
 
-                // Turno do jogador
+                // --- TURNO DO JOGADOR ---
                 if (escolha == "1")
                 {
-                    Console.WriteLine($"\n{player.Nome} usa ATAQUE NORMAL!");
-                    enemy.Vida -= player.Ataque;
+                    int dano = CalcularDano(player, enemy);
+                    Console.WriteLine($"\n{player.Nome} usa ATAQUE NORMAL causando {dano} de dano!");
+                    enemy.Vida -= dano;
                 }
                 else if (escolha == "2" && player.CooldownEspecial == 0)
                 {
-                    int danoEspecial = (int)(player.Ataque * 1.15);
-                    Console.WriteLine($"\n{player.Nome} usa ATAQUE ESPECIAL causando {danoEspecial} de dano!");
-                    enemy.Vida -= danoEspecial;
+                    int danoBase = (int)(player.Ataque * 1.15);
+                    int danoFinal = danoBase - (enemy.Defesa / 2);
+                    if (danoFinal < 1) danoFinal = 1;
 
-                    player.CooldownEspecial = 2; // leva 2 turnos para recarregar
+                    Console.WriteLine($"\n{player.Nome} usa ATAQUE ESPECIAL causando {danoFinal} de dano!");
+                    enemy.Vida -= danoFinal;
+
+                    player.CooldownEspecial = 2;
                 }
                 else
                 {
                     Console.WriteLine("\nAção inválida! Você perde o turno!");
                 }
 
-                // Verifica se o inimigo morreu
                 if (enemy.Vida <= 0) break;
 
-                // Turno do inimigo
-                Console.WriteLine($"\n{enemy.Nome} ataca causando {enemy.Ataque} de dano!");
-                player.Vida -= enemy.Ataque;
+                // --- TURNO DO INIMIGO ---
+                int danoInimigo = CalcularDano(enemy, player);
+                Console.WriteLine($"\n{enemy.Nome} ataca causando {danoInimigo} de dano!");
+                player.Vida -= danoInimigo;
 
-                // Atualiza cooldown
                 if (player.CooldownEspecial > 0)
                     player.CooldownEspecial--;
 
-                // Verifica morte do jogador
                 if (player.Vida <= 0) break;
 
                 Console.WriteLine("\nPressione ENTER para continuar o próximo turno...");
                 Console.ReadLine();
             }
 
-            // Resultado final
             Console.Clear();
+
             if (player.Vida > 0)
                 Console.WriteLine($"🎉 {player.Nome} venceu a batalha!");
             else
@@ -146,6 +166,7 @@ namespace testevillelarpg
 
             Console.WriteLine("\nPressione ENTER para reiniciar...");
             Console.ReadLine();
+
             Restart();
         }
 
