@@ -1,8 +1,7 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace rpgensaio
+namespace testevillelarpg
 {
     public class Personagem
     {
@@ -10,8 +9,9 @@ namespace rpgensaio
         public int Vida { get; set; }
         public int Ataque { get; set; }
 
-        // Novo: cooldown do ataque especial
+        // skill ataque especial
         public int CooldownEspecial { get; set; } = 0;
+        public int Defesa { get; internal set; }
     }
 
     class Program
@@ -42,9 +42,9 @@ namespace rpgensaio
 
             var personagens = new List<Personagem>()
             {
-                new Personagem { Nome = "Guerreiro", Vida = 100, Ataque = 20 },
-                new Personagem { Nome = "Mago", Vida = 70, Ataque = 30 },
-                new Personagem { Nome = "Arqueiro", Vida = 80, Ataque = 25 }
+                new Personagem { Nome = "Guerreiro", Vida = 100, Ataque = 35, Defesa = 15},
+                new Personagem { Nome = "Mago", Vida = 100, Ataque = 45, Defesa = 5 },
+                new Personagem { Nome = "Arqueiro", Vida = 100, Ataque =42, Defesa = 8},
             };
 
             Console.WriteLine("\nEscolha seu personagem:");
@@ -52,7 +52,14 @@ namespace rpgensaio
                 Console.WriteLine($"{i + 1} - {personagens[i].Nome}");
 
             Console.Write("\nDigite o número: ");
-            int escolha = int.Parse(Console.ReadLine()) - 1;
+            string? input = Console.ReadLine();
+            if (!int.TryParse(input, out int escolha) || escolha < 1 || escolha > personagens.Count)
+            {
+                Console.WriteLine("Escolha inválida! Pressione ENTER para tentar novamente...");
+                Console.ReadLine();
+                return;
+            }
+            escolha -= 1;
 
             player = personagens[escolha];
 
