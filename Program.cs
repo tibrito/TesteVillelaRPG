@@ -1,180 +1,171 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace testevillelarpg
+namespace ERPProdutos
 {
-    public class Personagem
-    {
-        public string Nome { get; set; }
-        public int Vida { get; set; }
-        public int Ataque { get; set; }
-        public int Defesa { get; set; }
-
-        public int CooldownEspecial { get; set; } = 0;
-    }
-
     class Program
     {
-        static string gameState = "selection";
-        static Personagem player = null;
-        static Personagem enemy = null;
+        static List<string> produtos = new List<string>();
 
         static void Main(string[] args)
         {
             while (true)
             {
-                if (gameState == "selection")
-                    CharacterSelection();
-
-                else if (gameState == "battle" && player != null && enemy != null)
-                    BattleArena();
-            }
-        }
-
-        static void CharacterSelection()
-        {
-            Console.Clear();
-            Console.WriteLine("=== SELEÇÃO DE PERSONAGENS ===");
-
-            var personagens = new List<Personagem>()
-            {
-                new Personagem { Nome = "Guerreiro", Vida = 150, Ataque = 30, Defesa = 20 },
-                new Personagem { Nome = "Mago", Vida = 100, Ataque = 45, Defesa = 8 },
-                new Personagem { Nome = "Arqueiro", Vida = 120, Ataque = 35, Defesa = 12 }
-            };
-
-            Console.WriteLine("\nEscolha seu personagem:");
-            for (int i = 0; i < personagens.Count; i++)
-                Console.WriteLine($"{i + 1} - {personagens[i].Nome}");
-
-            Console.Write("\nDigite o número: ");
-            string? input = Console.ReadLine();
-
-            if (!int.TryParse(input, out int escolha) || escolha < 1 || escolha > personagens.Count)
-            {
-                Console.WriteLine("Escolha inválida! Pressione ENTER para tentar novamente...");
-                Console.ReadLine();
-                return;
-            }
-
-            player = personagens[escolha - 1];
-
-            // Escolha do inimigo
-            Console.Clear();
-            Console.WriteLine("=== SELEÇÃO DO INIMIGO ===\n");
-
-            for (int i = 0; i < personagens.Count; i++)
-                if (personagens[i].Nome != player.Nome)
-                    Console.WriteLine($"{i + 1} - {personagens[i].Nome}");
-
-            Console.Write("\nDigite o número do inimigo: ");
-            input = Console.ReadLine();
-
-            if (!int.TryParse(input, out escolha) || escolha < 1 || escolha > personagens.Count ||
-                personagens[escolha - 1].Nome == player.Nome)
-            {
-                Console.WriteLine("Escolha inválida! Pressione ENTER para tentar novamente...");
-                Console.ReadLine();
-                return;
-            }
-
-            enemy = personagens[escolha - 1];
-
-            Console.WriteLine($"\nVocê escolheu: {player.Nome}");
-            Console.WriteLine($"O adversário será: {enemy.Nome}");
-
-            Console.WriteLine("\nPressione ENTER para iniciar a batalha...");
-            Console.ReadLine();
-
-            gameState = "battle";
-        }
-
-        static int CalcularDano(Personagem atacante, Personagem alvo)
-        {
-            int dano = atacante.Ataque - (alvo.Defesa / 2);
-            if (dano < 1) dano = 1; // nunca zero
-            return dano;
-        }
-
-        static void BattleArena()
-        {
-            Console.Clear();
-
-            while (player.Vida > 0 && enemy.Vida > 0)
-            {
                 Console.Clear();
-                Console.WriteLine("=== BATALHA ===\n");
-                Console.WriteLine($"{player.Nome} - Vida: {player.Vida} | Defesa: {player.Defesa} | Cooldown: {player.CooldownEspecial}");
-                Console.WriteLine($"{enemy.Nome} - Vida: {enemy.Vida} | Defesa: {enemy.Defesa}");
-                Console.WriteLine("\nEscolha sua ação:");
+                Console.WriteLine("=== ERP - Menu de Produtos ===");
+                Console.WriteLine("1 - Adicionar Produto");
+                Console.WriteLine("2 - Listar Produtos");
+                Console.WriteLine("3 - Atualizar Produto");
+                Console.WriteLine("4 - Remover Produto");
+                Console.WriteLine("0 - Sair");
+                Console.Write("Escolha uma opção: ");
 
-                Console.WriteLine("(1) Ataque Normal");
+                string opcao = Console.ReadLine();
 
-                if (player.CooldownEspecial == 0)
-                    Console.WriteLine("(2) Ataque Especial (+15% dano)");
-                else
-                    Console.WriteLine("(2) Ataque Especial (INDISPONÍVEL)");
-
-                Console.Write("\nDigite sua escolha: ");
-                string escolha = Console.ReadLine();
-
-                // --- TURNO DO JOGADOR ---
-                if (escolha == "1")
+                switch (opcao)
                 {
-                    int dano = CalcularDano(player, enemy);
-                    Console.WriteLine($"\n{player.Nome} usa ATAQUE NORMAL causando {dano} de dano!");
-                    enemy.Vida -= dano;
+                    case "1":
+                        AdicionarProduto();
+                        break;
+                    case "2":
+                        ListarProdutos();
+                        break;
+                    case "3":
+                        AtualizarProduto();
+                        break;
+                    case "4":
+                        RemoverProduto();
+                        break;
+                    case "0":
+                        Console.WriteLine("Saindo...");
+                        return;
+                    default:
+                        Console.WriteLine("Opção inválida!");
+                        Console.ReadLine();
+                        break;
                 }
-                else if (escolha == "2" && player.CooldownEspecial == 0)
-                {
-                    int danoBase = (int)(player.Ataque * 1.15);
-                    int danoFinal = danoBase - (enemy.Defesa / 2);
-                    if (danoFinal < 1) danoFinal = 1;
-
-                    Console.WriteLine($"\n{player.Nome} usa ATAQUE ESPECIAL causando {danoFinal} de dano!");
-                    enemy.Vida -= danoFinal;
-
-                    player.CooldownEspecial = 2;
-                }
-                else
-                {
-                    Console.WriteLine("\nAção inválida! Você perde o turno!");
-                }
-
-                if (enemy.Vida <= 0) break;
-
-                // --- TURNO DO INIMIGO ---
-                int danoInimigo = CalcularDano(enemy, player);
-                Console.WriteLine($"\n{enemy.Nome} ataca causando {danoInimigo} de dano!");
-                player.Vida -= danoInimigo;
-
-                if (player.CooldownEspecial > 0)
-                    player.CooldownEspecial--;
-
-                if (player.Vida <= 0) break;
-
-                Console.WriteLine("\nPressione ENTER para continuar o próximo turno...");
-                Console.ReadLine();
             }
-
-            Console.Clear();
-
-            if (player.Vida > 0)
-                Console.WriteLine($"🎉 {player.Nome} venceu a batalha!");
-            else
-                Console.WriteLine($"💀 {enemy.Nome} venceu a batalha!");
-
-            Console.WriteLine("\nPressione ENTER para reiniciar...");
-            Console.ReadLine();
-
-            Restart();
         }
 
-        static void Restart()
+        static void AdicionarProduto()
         {
-            player = null;
-            enemy = null;
-            gameState = "selection";
+            Console.Clear();
+            Console.WriteLine("=== Adicionar Produto ===");
+
+            Console.Write("Nome: ");
+            string nome = Console.ReadLine();
+
+            Console.Write("Preço: ");
+            decimal preco = decimal.Parse(Console.ReadLine());
+
+            Console.Write("Categoria: ");
+            string categoria = Console.ReadLine();
+
+            produtos.Add($"{nome};{preco};{categoria}");
+
+            Console.WriteLine("\nProduto adicionado com sucesso!");
+            Console.WriteLine("Pressione ENTER para voltar ao menu...");
+            Console.ReadLine();
+        }
+
+        static void ListarProdutos()
+        {
+            Console.Clear();
+            Console.WriteLine("=== Lista de Produtos ===");
+
+            if (produtos.Count == 0)
+            {
+                Console.WriteLine("Nenhum produto cadastrado ainda!");
+            }
+            else
+            {
+                foreach (var p in produtos)
+                {
+                    Console.WriteLine(p);
+                }
+            }
+
+            Console.WriteLine("\nPressione ENTER para voltar ao menu...");
+            Console.ReadLine();
+        }
+
+        static void AtualizarProduto()
+        {
+            Console.Clear();
+            Console.WriteLine("=== Atualizar Produto ===");
+
+            Console.Write("Digite o nome do produto a atualizar: ");
+            string nomeBusca = Console.ReadLine();
+
+            int index = produtos.FindIndex(p => p.StartsWith(nomeBusca + ";"));
+
+            if (index == -1)
+            {
+                Console.WriteLine("Produto não encontrado!");
+                Console.ReadLine();
+                return;
+            }
+
+            string[] dados = produtos[index].Split(';');
+
+            Console.WriteLine("\nO que deseja alterar?");
+            Console.WriteLine("1 - Nome");
+            Console.WriteLine("2 - Preço");
+            Console.WriteLine("3 - Categoria");
+            Console.Write("Escolha: ");
+            string opcao = Console.ReadLine();
+
+            switch (opcao)
+            {
+                case "1":
+                    Console.Write("Novo nome: ");
+                    dados[0] = Console.ReadLine();
+                    break;
+
+                case "2":
+                    Console.Write("Novo preço: ");
+                    dados[1] = Console.ReadLine();
+                    break;
+
+                case "3":
+                    Console.Write("Nova categoria: ");
+                    dados[2] = Console.ReadLine();
+                    break;
+
+                default:
+                    Console.WriteLine("Opção inválida!");
+                    Console.ReadLine();
+                    return;
+            }
+
+            produtos[index] = string.Join(";", dados);
+
+            Console.WriteLine("\nProduto atualizado com sucesso!");
+            Console.ReadLine();
+        }
+
+        static void RemoverProduto()
+        {
+            Console.Clear();
+            Console.WriteLine("=== Remover Produto ===");
+
+            Console.Write("Digite o nome do produto a remover: ");
+            string nomeBusca = Console.ReadLine();
+
+            int index = produtos.FindIndex(p => p.StartsWith(nomeBusca + ";"));
+
+            if (index == -1)
+            {
+                Console.WriteLine("Produto não encontrado!");
+            }
+            else
+            {
+                produtos.RemoveAt(index);
+                Console.WriteLine("Produto removido com sucesso!");
+            }
+
+            Console.WriteLine("\nPressione ENTER para voltar ao menu...");
+            Console.ReadLine();
         }
     }
 }
