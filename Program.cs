@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace testevillelarpg
+﻿namespace testevillelarpg
 {
     public class Personagem
     {
